@@ -8,12 +8,18 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.instaapp.models.Post
+import com.example.instaapp.models.User
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.android.synthetic.main.activity_posts.*
 
+
+private  var  signedInUser:User?=null
+
 private  const val TAG="PostsActivity"
-class PostsActivity : AppCompatActivity() {
+private const val EXTRA_USERNAME="EXTRA_USERNAME"
+open class PostsActivity : AppCompatActivity() {
 
      private  lateinit var firestoreDb:FirebaseFirestore
     private lateinit var  posts:MutableList<Post>
@@ -32,9 +38,33 @@ class PostsActivity : AppCompatActivity() {
         rvPosts.layoutManager=LinearLayoutManager(this)
 
         firestoreDb = FirebaseFirestore.getInstance()
-        val postsReference = firestoreDb.collection("posts")
+
+        firestoreDb.collection("users")
+            .document(FirebaseAuth.getInstance().currentUser?.uid as String)
+            .get()
+            .addOnSuccessListener { userSnapshot->
+                signedInUser=userSnapshot.toObject(User::class.java)
+                Log.i(TAG,"signed in user: $signedInUser")
+            }
+            .addOnFailureListener {exception ->
+                Log.i(TAG,"Failure fetching signed in user",exception)
+
+            }
+
+
+        var postsReference = firestoreDb.collection("posts")
             .limit(20)
             .orderBy("creation_time_ms",Query.Direction.DESCENDING)
+        //single user
+           val username=intent.getStringExtra(EXTRA_USERNAME)
+        if(username!=null){
+            supportActionBar?.title=username
+            postsReference=postsReference.whereEqualTo("user.username",username)
+
+        }
+
+
+
         postsReference.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
             if (firebaseFirestoreException != null || querySnapshot == null) {
                 Log.e(TAG, "Exception when queryin posts", firebaseFirestoreException)
@@ -54,6 +84,12 @@ class PostsActivity : AppCompatActivity() {
 
 
         }
+
+
+        floatingActionButton2.setOnClickListener {
+          val intent=Intent(this,CreateActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -64,6 +100,7 @@ class PostsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId==R.id.menu_profile){
             val intent=Intent(this,ProfileActivity::class.java)
+            intent.putExtra(EXTRA_USERNAME, signedInUser?.username)
             startActivity(intent)
         }
 
