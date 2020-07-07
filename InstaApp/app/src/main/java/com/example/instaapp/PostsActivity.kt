@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.activity_posts.*
 private  var  signedInUser:User?=null
 
 private  const val TAG="PostsActivity"
-private const val EXTRA_USERNAME="EXTRA_USERNAME"
+const val EXTRA_USERNAME="EXTRA_USERNAME"
 open class PostsActivity : AppCompatActivity() {
 
      private  lateinit var firestoreDb:FirebaseFirestore
