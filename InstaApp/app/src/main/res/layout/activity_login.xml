@@ -43,4 +43,10 @@
         android:text="Login"
         android:textColor="@color/common_google_signin_btn_text_dark_default"
         android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Button" />
 </LinearLayout>

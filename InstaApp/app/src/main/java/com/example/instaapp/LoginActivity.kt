@@ -20,6 +20,8 @@ class LoginActivity : AppCompatActivity() {
             goPostsActivity()
         }
 
+
+
         btnLogin.setOnClickListener {
             btnLogin.isEnabled=false
             val email=etEmail.text.toString()
