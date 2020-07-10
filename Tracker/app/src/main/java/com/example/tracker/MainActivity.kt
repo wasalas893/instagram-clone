@@ -4,15 +4,21 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.google.gson.GsonBuilder
+import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.*
+
 private  const val BASE_URL="https://covidtracking.com/api/v1/"
 private  const val TAG="MainActivity"
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var adapter: CovidSparkAdapter
     private lateinit var perStateDailyData: Map<String, List<CovidData>>
     private lateinit var nationalDailyData: List<CovidData>
 
@@ -40,8 +46,10 @@ class MainActivity : AppCompatActivity() {
                     Log.w(TAG,"Did not receive a valid response body")
                     return
                 }
+                setupEventListeners()
                 nationalDailyData=nationalData.reversed()
-                Log.i(TAG,"update graph with national data")
+                Log.i(TAG,"update graph with national data $nationalDailyData")
+                updateDisplayWithData(nationalDailyData)
             }
 
         })
@@ -65,4 +73,60 @@ class MainActivity : AppCompatActivity() {
 
         })
     }
+
+    private fun setupEventListeners() {
+        //add a listener for the user scrubbing on the chart
+        sparkView.isScrubEnabled=true
+        sparkView.setScrubListener { itemData->
+            if(itemData is CovidData){
+                updateInfoForDate(itemData)
+            }
+        }
+        //radio buttons
+        radioGroupTimeSelection.setOnCheckedChangeListener { _, checkedId ->
+            adapter.daysAgo=when(checkedId){
+                R.id.radioButtonWeek->TimeScale.WEEK
+                R.id.radioButtonMonth->TimeScale.MONTH
+                else->TimeScale.MAX
+            }
+            adapter.notifyDataSetChanged()
+        }
+        radioGroupSelection.setOnCheckedChangeListener { _, checkedId ->
+            when(checkedId){
+                R.id.radioButtonNagive->updateDisplayMetric(Metric.NEGATIVE)
+                R.id.radioButtonPositive->updateDisplayMetric(Metric.POSITIVE)
+                R.id.radioButtonDeath->updateDisplayMetric(Metric.DEATH)
+            }
+        }
+    }
+    private  fun updateDisplayMetric(metric: Metric){
+        adapter.metric=metric
+        adapter.notifyDataSetChanged()
+    }
+
+    private fun updateDisplayWithData(dailyData: List<CovidData>) {
+        //create an ew Sparkadapter wih the data
+        adapter=CovidSparkAdapter(dailyData)
+        sparkView.adapter=adapter
+        //update radio button to select the positive cases and max time by default
+        radioButtonPositive.isChecked=true
+        radioButtonMax.isChecked=true
+        //display metric for the  most recent date
+
+       updateInfoForDate(dailyData.last())
+    }
+
+    private fun updateInfoForDate(covidData: CovidData) {
+        val numCases=when(adapter.metric){
+            Metric.NEGATIVE->covidData.negativeIncrease
+            Metric.POSITIVE->covidData.positiveIncrease
+            Metric.DEATH->covidData.deathIncrease
+        }
+
+          tvMetricLable.text=NumberFormat.getInstance().format(numCases)
+          val outputDateFormat=SimpleDateFormat("MMM dd,yyyy",Locale.US)
+        tvDateLable.text=outputDateFormat.format(covidData.dateChecked)
+    }
+
+
 }

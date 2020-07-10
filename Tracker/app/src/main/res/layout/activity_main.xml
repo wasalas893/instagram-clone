@@ -103,5 +103,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/tvDateLable"
-        tools:text="25689,500" />
+        tools:text="25628" />
 </androidx.constraintlayout.widget.ConstraintLayout>
