@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun apifuntion() {
-        var url="https://covid19.mathdro.id/api/countries"
+        var url="https://covid19.mathdro.id/api"
         
         var request=Request.Builder().url(url).build()
 
