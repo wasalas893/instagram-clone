@@ -16,7 +16,9 @@ import java.util.*
 
 private  const val BASE_URL="https://covidtracking.com/api/v1/"
 private  const val TAG="MainActivity"
+private const val  ALL_STATES="All Citys"
 class MainActivity : AppCompatActivity() {
+
 
     private lateinit var adapter: CovidSparkAdapter
     private lateinit var perStateDailyData: Map<String, List<CovidData>>
@@ -69,10 +71,30 @@ class MainActivity : AppCompatActivity() {
                 }
                 perStateDailyData=statesData.reversed().groupBy { it.state }
                 Log.i(TAG,"update spinner with state names")
+
+                //update state
+                updateSpinnerWithStateData(perStateDailyData.keys)
             }
 
         })
     }
+
+    private fun updateSpinnerWithStateData(stateNames: Set<String>) {
+        val stateAbbreviationList=stateNames.toMutableList()
+        stateAbbreviationList.sort()
+        stateAbbreviationList.add(0,ALL_STATES)
+
+        //add spinner
+        spinnerSelect.attachDataSource(stateAbbreviationList)
+        spinnerSelect.setOnSpinnerItemSelectedListener { parent, _, position, _ ->
+
+            val selectedState=parent.getItemAtPosition(position) as String
+            val selectData=perStateDailyData[selectedState]?:nationalDailyData
+            updateDisplayWithData(selectData)
+        }
+    }
+
+
 
     private fun setupEventListeners() {
         //add a listener for the user scrubbing on the chart
